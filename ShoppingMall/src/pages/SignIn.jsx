@@ -1,8 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import kakaoimg from '../assets/Vector.svg'
 
 export default function SignIn() {
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <div className="signin-container">
       <div className="signin-card">
@@ -12,10 +17,17 @@ export default function SignIn() {
           서비스를 이용해보세요!
         </p>
 
-        <button className="kakao-btn">
+        <button
+          className="kakao-btn"
+          onClick={() => {
+            login();
+            navigate('/');
+      }}
+        >
           <div className="kakao-btn-message">카카오톡으로 로그인</div>
           <img src={kakaoimg} alt="kakao" />
         </button>
+
       </div>
      </div>
     </div>
