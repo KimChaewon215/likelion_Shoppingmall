@@ -25,7 +25,9 @@ const Navbar = () => {
 
   const handleCartClick = (e) => {
     e.preventDefault();
-    if (!isLoggedIn) return setShowLoginModal(true);
+    if (!isLoggedIn) {
+      return setShowLoginModal(true)
+    };
     navigate('/cart');
   };
 
