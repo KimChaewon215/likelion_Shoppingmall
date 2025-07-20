@@ -2,10 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Card from '../components/Card';
 import { fetchAllProducts, searchProducts } from '../apis/products';
+import { addToCart as apiAddToCart } from '../apis/cart';
+import { useAuth } from '../contexts/AuthContext';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 
 const MainPage = () => {
   const [products, setProducts] = useState([]);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const location = useLocation();
+  const { isLoggedIn } = useAuth();
+
   const searchQuery = new URLSearchParams(location.search).get('q');
 
   useEffect(() => {
@@ -25,8 +31,14 @@ const MainPage = () => {
     loadProducts();
   }, [searchQuery]);
 
-  const handleAddToCart = (product) => {
-    console.log('Added to cart:', product);
+  const handleAddToCart = async (product) => {
+    if (!isLoggedIn) return setShowLoginModal(true);
+    try {
+      await apiAddToCart(product.id, 1);
+      alert('장바구니에 추가되었습니다!');
+    } catch (err) {
+      alert('장바구니 추가 실패');
+    }
   };
 
   return (
@@ -50,8 +62,12 @@ const MainPage = () => {
             onAddToCart={() => handleAddToCart(product)}
           />
           );
-          })}
+        })}
       </div>
+
+      {showLoginModal && (
+        <LoginRequiredModal onClose={() => setShowLoginModal(false)} />
+      )}
     </div>
   );
 };

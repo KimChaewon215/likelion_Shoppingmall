@@ -4,22 +4,31 @@ import profileIcon from '../assets/profile-icon.svg';
 import cartIcon from '../assets/cart-icon.svg';
 import menuBarIcon from '../assets/menubar-icon.svg';
 import searchIcon from '../assets/search.svg';
+import { useAuth } from '../contexts/AuthContext';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const navigate = useNavigate();
+  const { isLoggedIn, logout } = useAuth();
 
-
-  const handleSearchChange = (e) => {
-    setSearch(e.target.value);
-  };
+  const handleSearchChange = (e) => setSearch(e.target.value);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (search.trim()) {
       navigate(`/?q=${encodeURIComponent(search)}`);
     }
+  };
+
+  const handleCartClick = (e) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      return setShowLoginModal(true)
+    };
+    navigate('/cart');
   };
 
   return (
@@ -50,15 +59,25 @@ const Navbar = () => {
         </form>
       </div>
 
-      {/* 우측 Sign In, Cart */}
+      {/* 우측 버튼들 */}
       <div className="hidden md:flex items-center gap-6 ml-4">
-        <Link to="/signin" className="flex items-center gap-1 text-sm text-gray-800 hover:underline">
-          <img src={profileIcon} alt="Sign In" className="w-5 h-5" />
-          Sign In
-        </Link>
-        <Link to="/cart">
+        {isLoggedIn ? (
+          <button
+            onClick={logout}
+            className="flex items-center gap-1 text-sm text-gray-800 hover:underline"
+          >
+            <img src={profileIcon} alt="Logout" className="w-5 h-5" />
+            Logout
+          </button>
+        ) : (
+          <Link to="/signin" className="flex items-center gap-1 text-sm text-gray-800 hover:underline">
+            <img src={profileIcon} alt="Sign In" className="w-5 h-5" />
+            Sign In
+          </Link>
+        )}
+        <button onClick={handleCartClick}>
           <img src={cartIcon} alt="Cart" className="w-6 h-6" />
-        </Link>
+        </button>
       </div>
 
       {/* 모바일 메뉴 버튼 */}
@@ -69,15 +88,27 @@ const Navbar = () => {
       {/* 모바일 드롭다운 */}
       {isOpen && (
         <div className="absolute top-16 left-0 w-full bg-white shadow-md flex flex-col items-center py-4 gap-4 md:hidden z-50">
-          <Link to="/signin" className="flex items-center gap-2 text-sm text-gray-800 hover:underline">
-            <img src={profileIcon} alt="Sign In" className="w-5 h-5" />
-            Sign In
-          </Link>
-          <Link to="/cart">
+          {isLoggedIn ? (
+            <button
+              onClick={logout}
+              className="flex items-center gap-2 text-sm text-gray-800 hover:underline"
+            >
+              <img src={profileIcon} alt="Logout" className="w-5 h-5" />
+              Logout
+            </button>
+          ) : (
+            <Link to="/signin" className="flex items-center gap-2 text-sm text-gray-800 hover:underline">
+              <img src={profileIcon} alt="Sign In" className="w-5 h-5" />
+              Sign In
+            </Link>
+          )}
+          <button onClick={handleCartClick}>
             <img src={cartIcon} alt="Cart" className="w-6 h-6" />
-          </Link>
+          </button>
         </div>
       )}
+
+      {showLoginModal && <LoginRequiredModal onClose={() => setShowLoginModal(false)} />}
     </nav>
   );
 };

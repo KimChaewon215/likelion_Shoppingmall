@@ -2,11 +2,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { fetchProductById } from '../apis/products';
-import { addToCart as apiAddToCart } from '../apis/cart'; //추가했습니다
+import { addToCart as apiAddToCart } from '../apis/cart';
 import defaultImage from '../assets/defaultImage.png';
 import likeIcon from '../assets/likeButton.svg';
 import exitIcon from '../assets/exit.svg';
 import cartIcon from '../assets/purpleCart.svg';
+import { useAuth } from '../contexts/AuthContext';
+import LoginRequiredModal from '../components/LoginRequiredModal';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -15,13 +17,14 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [liked, setLiked] = useState(false);
-  const { addToCart:addToCartContext } = useCart();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { addToCart: addToCartContext } = useCart();
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     const loadProduct = async () => {
       try {
         const data = await fetchProductById(id);
-        console.log('상품 상세 조회 성공: ', data);
         setProduct(data);
       } catch (err) {
         console.error('상품 상세 조회 실패:', err);
@@ -30,22 +33,17 @@ export default function ProductDetail() {
     loadProduct();
   }, [id]);
 
-  //디버깅 과정에서 에러 메시지 찍어보느라 내용 조금 수정했습니다!
   const handleAddToCart = async () => {
-  console.log('handleAddToCart 시작, apiAddToCart=', apiAddToCart);
-  if (!product) return;
-  console.log('product.id=', product.id, 'quantity=', quantity);
-  try {
-    const updated = await apiAddToCart(product.id, quantity);
-    console.log('🛒 API 응답:', updated);
-    addToCartContext(product, quantity);
-    setShowModal(true);
-  } catch (err) {
-    console.error('addToCart 에러 전체:', err);
-    console.error('err.response:', err.response);
-    alert(`장바구니 담기에 실패했습니다.\nHTTP ${err.response?.status}\n${JSON.stringify(err.response?.data)}`);
-  }
-};
+    if (!product) return;
+    if (!isLoggedIn) return setShowLoginModal(true);
+    try {
+      const updated = await apiAddToCart(product.id, quantity);
+      addToCartContext(product, quantity);
+      setShowModal(true);
+    } catch (err) {
+      alert('장바구니 담기 실패');
+    }
+  };
 
   const totalPrice = product ? (product.price * quantity).toLocaleString() : 0;
 
@@ -117,6 +115,8 @@ export default function ProductDetail() {
           </div>
         </div>
       )}
+
+      {showLoginModal && <LoginRequiredModal onClose={() => setShowLoginModal(false)} />}
     </main>
   );
 }
