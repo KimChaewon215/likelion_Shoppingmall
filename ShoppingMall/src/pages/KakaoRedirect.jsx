@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import login from '../apis/auth';
 import { useAuthStore } from '../stores/authStore';
+import axios from 'axios';
 
 export default function KakaoRedirectPage() {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ export default function KakaoRedirectPage() {
   const { setTokens } = useAuthStore();
 
   useEffect(() => {
-    const code = searchParams.get('code');
+    const code = new URL(window.location.href).searchParams.get('code');
     console.log('카카오 인가 코드:', code);
 
     if (!code) {
@@ -19,11 +19,18 @@ export default function KakaoRedirectPage() {
 
     (async () => {
       try {
-        const { accessToken, refreshToken } = await login(code);
+        const res = await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/auth/kakao`,
+          { code }
+        );
+
+        const { accessToken, refreshToken } = res.data;
+        console.log('토큰 응답:', res.data);
+
         setTokens(accessToken, refreshToken);
         navigate('/');
       } catch (err) {
-        console.error(err);
+        console.error('로그인 실패:', err);
         alert('로그인에 실패했습니다.');
         navigate('/login');
       }
